@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -15,36 +15,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	defer l.Close()
+
 	conn, err := l.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
 
-	// Status line:
-	// HTTP/1.1  // HTTP version
-	// 200       // Status code
-	// OK        // Optional reason phrase
-	// \r\n      // CRLF that marks the end of the status line
+	req := make([]byte, 1024)
 
-	// Headers (empty)
-  // \r\n      // CRLF that marks the end of the headers
-	
-	// Response body (empty)
-
-
-	req :=make([]byte,1024)
-
-	if _,err :=conn.Read(data) ; err != nil {
-		fmt.Println("Failed to read data:",err.Error())
+	if _, err := conn.Read(req); err != nil {
+		fmt.Println("Failed to read data:", err.Error())
 	}
-	
+
 	data := string(req)
-	idx := strings.Index(data,"/")
+	path := strings.Split(data, " ")[1]
+	response := ""
 
-	if strings.HasPrefix(string(data), "GET / HTTP/1.1") { 
-		conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-	}else{
-		conn.Write([]byte("HTTP/1.1 404 NOT FOUND\r\n\r\n"))
+	if path == "/" {
+		response = "HTTP/1.1 200 OK\r\n\r\n"
+	} else if strings.HasPrefix(path, "/echo") {
+		qry := path[6:]
+		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(qry), qry)
+	} else if strings.HasPrefix(path, "/user-agent") {
+		agent := strings.Split(data, "\r\n")[3]
+		agent = strings.Split(agent, " ")[1]
+		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(agent), agent)
+	} else {
+		response = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
 	}
+
+	conn.Write([]byte(response))
 }
