@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -60,11 +59,12 @@ func main() {
 		} else if strings.HasPrefix(data, "POST") {
 			body := strings.Split(data, "\r\n\r\n")[1]
 
-			cmd := exec.Command("echo", "-n", body, ">", "./tmp/"+path[6:])
-			_, err := cmd.Output()
+			err := os.WriteFile("./tmp/"+path[6:], []byte(body), 0644)
 			if err != nil {
 				fmt.Println(err.Error())
 			}
+
+			response = "HTTP/1.1 201 Created\r\n\r\n"
 		}
 	} else {
 		response = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
