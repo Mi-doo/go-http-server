@@ -36,14 +36,22 @@ func main() {
 	}
 
 	data := string(req)
+
 	path := strings.Split(data, " ")[1]
+	contentType := strings.Split(data, " ")[6]
+	contentEncoding := ""
 	response := ""
-	fmt.Println(data)
+	fmt.Print(contentType)
+	if string(contentType) == string("gzip") {
+		contentEncoding = "Content-Encoding: gzip"
+	}
+
+	fmt.Println(contentEncoding)
 	if path == "/" {
 		response = "HTTP/1.1 200 OK\r\n\r\n"
 	} else if strings.HasPrefix(path, "/echo") {
 		qry := path[6:]
-		response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(qry), qry)
+		response = fmt.Sprintf("HTTP/1.1 200 OK\r\n%s\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", contentEncoding, len(qry), qry)
 	} else if strings.HasPrefix(path, "/user-agent") {
 		agent := strings.Split(data, "\r\n")[3]
 		agent = strings.Split(agent, " ")[1]
@@ -54,7 +62,7 @@ func main() {
 			if err != nil {
 				response = "HTTP/1.1 404 NOT FOUND\r\n\r\n"
 			} else {
-				response = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(text), text)
+				response = fmt.Sprintf("HTTP/1.1 200 OK\r\n%s\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", contentEncoding, len(text), text)
 			}
 		} else if strings.HasPrefix(data, "POST") {
 			body := strings.Split(data, "\r\n\r\n")[1]
