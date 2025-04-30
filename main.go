@@ -37,16 +37,16 @@ func main() {
 
 	data := string(req)
 
-	path := strings.Split(data, " ")[1]
-	contentType := strings.Split(data, " ")[6]
+	header := strings.Split(data, "\r\n")
+	path := strings.Split(header[0], " ")[1]
+	contentType := header[4]
 	contentEncoding := ""
 	response := ""
-	fmt.Print(contentType)
-	if string(contentType) == string("gzip") {
+
+	if strings.Contains(contentType, "gzip") {
 		contentEncoding = "Content-Encoding: gzip"
 	}
 
-	fmt.Println(contentEncoding)
 	if path == "/" {
 		response = "HTTP/1.1 200 OK\r\n\r\n"
 	} else if strings.HasPrefix(path, "/echo") {
